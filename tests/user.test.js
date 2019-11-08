@@ -19,7 +19,7 @@ let fakeUser = {
     token: ""
 };
 
-describe('### Auth Test Suite', () => {
+describe('### User Test Suite', () => {
     /** Test the POST /api/users route  */
     describe('# POST /api/users', () => {
         it('it should return an object containing an id, name, email and token', (done) => {
@@ -48,6 +48,7 @@ describe('### Auth Test Suite', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.be.an('object');
+                    res.body.error.should.equal('Validation failed for name field');
                     done();
                 });
         });
@@ -55,12 +56,14 @@ describe('### Auth Test Suite', () => {
             chai.request(app)
                 .post('/api/users')
                 .send({
+                    name: "dave",
                     email: "invalid.me",
                     password: fakeUser.password
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.be.an('object');
+                    res.body.error.should.equal('Validation failed for email field');
                     done();
                 });
         });
@@ -94,7 +97,7 @@ describe('### Auth Test Suite', () => {
                     email: fakeUser.email
                 })
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(401);
                     res.body.should.be.an('object');
                     done();
                 });
@@ -198,7 +201,6 @@ describe('### Auth Test Suite', () => {
                             done();
                         })
                 })
-
         });
         it('it should error if no auth token', (done) => {
             chai.request(app)
@@ -235,7 +237,6 @@ describe('### Auth Test Suite', () => {
                             done();
                         })
                 })
-
         });
         it('it should error if no auth token', (done) => {
             chai.request(app)

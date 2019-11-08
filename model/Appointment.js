@@ -6,86 +6,104 @@ const apptSchema = new mongoose.Schema({
     apptDate: {
         type: Date,
         default: Date.now,
-        required: true
+        required: true,
+        maxLength: 1024
     },
     apptTime: {
         type: Date,
         default: Date.now,
-        required: true
+        required: true,
+        maxLength: 1024
     },
     customer: {
         name: {
             type: String,
             required: true,
-            max: 1024,
-            min: 2,
+            maxLength: 1024,
             trim: true,
             lowercase: true
         },
         email: {
             type: String,
             trim: true,
-            lowercase: true
-            // validate: [validateEmail, 'Please fill a valid email address'],
-            // match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+            lowercase: true,
+            required: true,
+            match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email address'],
+            maxLength: 1024
         },
-        mobile: {
+        phone: {
             type: String,
             trim: true,
-            required: true
+            required: true,
+            maxLength: 30
         },
         altPhone: {
             type: String,
-            trim: true
+            trim: true,
+            maxLength: 30
         }
     },
     car: {
         registration: {
             type: String,
             trim: true,
-            max: 7,
+            maxLength: 7,
             uppercase: true,
             required: true
         },
         make: {
             type: String,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            maxLength: 1024
         },
         model: {
             type: String,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            maxLength: 1024
         },
         firstUsed: {
             type: Date,
-            default: Date.now
+            default: Date.now,
+            trim: true,
+            maxLength: 1024
         },
         fuelType: {
             type: String,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            maxLength: 1024
         },
         color: {
             type: String,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            maxLength: 1024
         },
         vehicleId: {
             type: String,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            maxLength: 1024
         },
         regDate: {
             type: Date,
-            default: Date.now
+            default: Date.now,
+            trim: true,
+            maxLength: 1024
         },
         manufacDate: {
             type: Date,
-            default: Date.now
+            default: Date.now,
+            trim: true,
+            maxLength: 1024
         },
         engineSize: {
-            type: Number
+            type: Number,
+            maxLength: 10,
+            trim: true,
+            maxLength: 1024
         }
         // motTests: [{
         //     completedDate: {
@@ -130,5 +148,3 @@ const apptSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Appointment', apptSchema);
-
-

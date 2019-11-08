@@ -1,80 +1,27 @@
+"use strict";
+
 const router = require('express').Router();
 const User = require('../model/User');
 const jwt = require('jsonwebtoken');
-"use strict";
-
 const auth = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
+const { header, check, validationResult } = require('express-validator');
+const validate = require('../middleware/validate');
+const userCtrl = require('../controllers/user.js');
 
+/** Create a new user */
+router.post('/', validate('user'), userCtrl.createUser)
 
-router.post('/', async (req, res) => {
-    // Create a new user
-    try {
-        const user = new User(req.body)
-        await user.save()
-        const token = await user.generateAuthToken()
-        user.password = undefined;
-        user.tokens = undefined;
-        res.status(201).send({ user, token })
-    } catch (error) {
-        res.status(400).send(error)
-    }
-})
+/** Login a registered user */
+router.post('/login', validate('login'), userCtrl.login)
 
-router.post('/login', async (req, res) => {
-    //Login a registered user
-    try {
-        const { email, password } = req.body
-        const user = await User.findByCredentials(email, password)
-        if (!user) {
-            return res.status(401).send({ error: 'Login failed! Check authentication credentials' })
-        }
-        const token = await user.generateAuthToken()
+/** View logged in user profile */
+router.get('/me', auth, userCtrl.viewProfile)
 
-        user.password = undefined;
-        user.tokens = undefined;
-        res.send({ user, token })
-    } catch (error) {
-        res.status(400).send(error)
-    }
-})
+/** Log user out of the application */
+router.post('/me/logout', validate('authHeader'), auth, userCtrl.logout)
 
-
-router.get('/me', auth, async (req, res) => {
-    try {
-        // View logged in user profile
-        const user = req.user;
-        user.password = undefined;
-        user.tokens = undefined;
-        res.send({ user })
-    } catch (error) {
-        res.status(400).send(error);
-    }
-
-})
-
-router.post('/me/logout', auth, async (req, res) => {
-    // Log user out of the application
-    try {
-        req.user.tokens = req.user.tokens.filter((token) => {
-            return token.token != req.token
-        })
-        await req.user.save()
-        res.send({ loggedOut: true })
-    } catch (error) {
-        res.status(500).send(error)
-    }
-})
-
-router.post('/me/logoutall', auth, async (req, res) => {
-    // Log user out of all devices
-    try {
-        req.user.tokens.splice(0, req.user.tokens.length)
-        await req.user.save()
-        res.send({ loggedOutAll: true })
-    } catch (error) {
-        res.status(500).send(error)
-    }
-})
+/** Log user out of all devices */
+router.post('/me/logoutall', validate('authHeader'), auth, userCtrl.logoutAll)
 
 module.exports = router;

@@ -1,7 +1,6 @@
 "use strict";
 
 const mongoose = require('mongoose');
-const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
@@ -9,6 +8,7 @@ const userSchema = new mongoose.Schema({
 	name: {
 		type: String,
 		required: true,
+        lowercase: true,
 		max: 255
 	},
 	email: {
@@ -17,11 +17,7 @@ const userSchema = new mongoose.Schema({
 		min: 6,
 		max: 255,
 		unique: true,
-		validate: value => {
-          if (!validator.isEmail(value)) {
-              throw new Error('Invalid Email address')
-          }
-        }
+        lowercase: true
 	},
 	password: {
 		type: String,
@@ -59,7 +55,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
     // Search for a user by email and password.
     const user = await User.findOne({email}).exec();   
     if (!user) {
-    		return false;
+    	return false;
     }
     const isPasswordMatch = await bcrypt.compare(password, user.password)
     if (!isPasswordMatch) {

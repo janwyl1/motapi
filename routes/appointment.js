@@ -1,73 +1,24 @@
 "use strict";
 
 const router = require('express').Router();
-const auth = require('../middleware/auth');
 const Appt = require('../model/Appointment');
+const apptCtrl = require('../controllers/appointment');
+const auth = require('../middleware/auth');
+const validate = require('../middleware/validate');
 
 /** Create new appointment */
-router.post('/new', async (req, res, next) => {
-    try {
-        const appt = new Appt(req.body);
-        const savedAppt = await appt.save();
-        res.send({ appt: appt._id });
-    } catch (err) {
-        res.status(400).send(err);
-    }
-});
+router.post('/new', validate('appt'), apptCtrl.createAppt);
 
-/** Delete specific appointment */
-router.delete('/:id', auth, (req, res, next) => {
-    try {
-        Appt.deleteOne({ _id: req.params.id })
-            .exec((err, appt) => {
-                if (err) throw err;                
-                res.send({ deleted: req.params.id });
-            })
-    } catch (err) {
-        res.status(400).send(err);
-    }
-});
+/** Delete appointment matching :id */
+router.delete('/:id', validate('id'), auth, apptCtrl.delAppt);
 
-/** Update specific appointment */
-router.put('/:id', auth, (req, res, next) => {
-    try {
-        Appt.findOneAndUpdate({ _id: req.params.id },  
-            req.body,
-            (err, appt) => {
-            	if (err) throw err;
-            	res.send({updated: req.params.id})
-            });
-    } catch (err) {
-         res.status(400).send(err);
-    }
-});
+/** Update appointment matching :id */
+router.put('/:id', validate('id'), validate('appt'), auth, apptCtrl.updateAppt);
 
 /** GET all appointments */
-router.get('/', auth, (req, res, next) => {
-    try {
-        Appt.find({}, (err, appts) => {
-            if (err) throw err;
-            res.send(appts);
-        })
-    } catch (err) {
-         res.status(400).send(err);
-    }
-});
+router.get('/', auth, apptCtrl.getAppts);
 
-/** GET appointment by id */
-router.get('/:id', auth, (req, res, next) => {
-    try {
-        Appt.find({ _id: req.params.id }, (err, appt) => {
-            if (err) throw err;
-            if (appt.length < 1) { 
-                return res.status(400).send({ error: 'No appointment found with id ' + req.params.id })
-            }
-            res.send(appt);
-        })
-    } catch (err) {
-        res.status(400).send(err);
-    }
-});
-
+/** GET appointment matching :id */
+router.get('/:id', auth, apptCtrl.getAppt);
 
 module.exports = router;

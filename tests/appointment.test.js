@@ -42,11 +42,11 @@ describe('### Appointment Test Suite', () => {
                     customer: {
                         name: "james",
                         email: "james@email.com",
-                        mobile: "07444555666",
+                        phone: "07444555666",
                         altPhone: "01514569872"
                     },
                     car: {
-                        registration: "MT55WHR",
+                        registration: "MD56AHR",
                         make: "FORD",
                         model: "FOCUS",
                         firstUsed: "",
@@ -78,7 +78,6 @@ describe('### Appointment Test Suite', () => {
                 .end((err, res) => {
                     res.should.have.status(400)
                     res.body.should.be.an('object');
-                    // res.body.error.should.be.a('string');
                     done();
                 });
         })
@@ -96,21 +95,20 @@ describe('### Appointment Test Suite', () => {
                     res.body[0].should.be.an('object');
                     res.body[0].customer.name.should.be.a('string');
                     res.body[0].customer.email.should.be.a('string');
-                    res.body[0].customer.mobile.should.be.a('string');
+                    res.body[0].customer.phone.should.be.a('string');
                     res.body[0].car.registration.should.be.a('string');
-                    res.body[0].car.vehicleId.should.have.lengthOf(24);
                     done();
                 });
         });
         it('it should error if no auth token', (done) => {
-             chai.request(app)
-            .get('/api/appt/')
-            .end((err, res) => {
-                res.should.have.status(401);
-                res.body.should.be.an('object');
-                res.body.error.should.equal('Not authorized to access this resource');
-                done();
-            });
+            chai.request(app)
+                .get('/api/appt/')
+                .end((err, res) => {
+                    res.should.have.status(401);
+                    res.body.should.be.an('object');
+                    res.body.error.should.equal('Not authorized to access this resource');
+                    done();
+                });
         })
     });
 
@@ -126,7 +124,7 @@ describe('### Appointment Test Suite', () => {
                     res.body[0].should.be.an('object');
                     res.body[0].customer.name.should.be.a('string');
                     res.body[0].customer.email.should.be.a('string');
-                    res.body[0].customer.mobile.should.be.a('string');
+                    res.body[0].customer.phone.should.be.a('string');
                     res.body[0].car.registration.should.be.a('string');
                     res.body[0]._id.should.equal(apptId);
                     res.body[0]._id.should.have.lengthOf(24);
@@ -161,7 +159,7 @@ describe('### Appointment Test Suite', () => {
                             customer: {
                                 name: "THIS WAS UPDATED",
                                 email: "updated@email.com",
-                                mobile: "075656498956"
+                                phone: "075656498956"
                             },
                             car: {
                                 registration: "YY694TR",
@@ -178,6 +176,28 @@ describe('### Appointment Test Suite', () => {
                         });
                 })
         });
+
+        it('should error if no appointment exists', (done) => {
+            chai.request(app)
+                .get('/api/appt/')
+                .set('Authorization', 'Bearer ' + fakeUser.token)
+                .end((err, res) => {
+                    chai.request(app)
+                        .put('/api/appt/5dc4a954d2c31904e8de652c')
+                        .set('Authorization', 'Bearer ' + fakeUser.token)
+                        .send({
+                            customer: {
+                                name: "THIS WAS UPDATED AGAIN"
+                            }
+                        })
+                        .end((err, res) => {
+                            res.should.have.status(400);
+                            res.body.should.be.an('object');
+                            res.body.error.should.match(/^No appointment found with id/);
+                            done();
+                        });
+                })
+        })
     });
 
     /* Test the DELETE /api/appt/:id route  */
@@ -198,5 +218,23 @@ describe('### Appointment Test Suite', () => {
                 })
 
         });
+        it('should error if no appointment exists', (done) => {
+            chai.request(app)
+                .get('/api/appt/')
+                .set('Authorization', 'Bearer ' + fakeUser.token)
+                .end((err, res) => {
+                    chai.request(app)
+                        .delete('/api/appt/5dc4a954d2c31904e8de652c')
+                        .set('Authorization', 'Bearer ' + fakeUser.token)
+                        .end((err, res) => {
+                            res.should.have.status(400);
+                            res.body.should.be.an('object');
+                            res.body.error.should.match(/^Unable to delete appointment/);
+                            done();
+                        });
+                })
+        })
     });
 });
+
+
