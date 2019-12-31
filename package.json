@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha ./tests --timeout 10000 --recursive",
-    "tauth": "mocha ./tests/user.test --timeout 10000",
-    "tappt": "mocha ./tests/appointment.test --timeout 10000",
-    "start": "nodemon app.js"
+    "test": "cross-env NODE_ENV=test mocha ./tests --timeout 10000 --recursive",
+    "tauth": "cross-env NODE_ENV=test mocha ./tests/user.test --timeout 10000",
+    "tappt": "cross-env NODE_ENV=test mocha ./tests/appointment.test --timeout 10000",
+    "tlookup": "cross-env NODE_ENV=test mocha ./tests/lookup.test --timeout 10000",
+    "start": "cross-env NODE_ENV=prodlocal nodemon app.js"
   },
   "author": "",
   "license": "ISC",
@@ -15,12 +16,15 @@
     "bcryptjs": "^2.4.3",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
+    "cross-env": "^6.0.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-validator": "^6.2.0",
     "faker": "^4.1.0",
     "jsonwebtoken": "^8.5.1",
     "mocha": "^6.2.2",
-    "mongoose": "^5.7.7"
+    "mongoose": "^5.7.7",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5"
   }
 }

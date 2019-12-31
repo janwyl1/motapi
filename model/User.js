@@ -25,12 +25,17 @@ const userSchema = new mongoose.Schema({
 		max: 1024,
 		min: 6
 	},
-  tokens: [{
+    tokens: [{
         token: {
             type: String,
             required: true
         }
-    }]
+    }],
+    role: {
+        type: String,
+        default: "basic",
+        enum: ["basic", "admin"]
+    }
 });
 
 userSchema.pre('save', async function (next) {

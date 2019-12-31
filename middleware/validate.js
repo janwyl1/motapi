@@ -16,7 +16,6 @@ const validate = (method) => {
             {
                 return [
                     check('apptDate', 'Invalid appointment date').custom(isValidDate).trim().stripLow(),
-                    check('apptTime', 'Invalid appointment time').custom(isValidDate).trim().stripLow(),
                     check('customer.name', 'Invalid name').isString().trim().escape().stripLow(),
                     check('customer.email', 'Invalid email').isEmail().normalizeEmail().stripLow(),
                     check('customer.phone', 'Invalid phone number').isString().trim().escape().stripLow(),
@@ -36,17 +35,25 @@ const validate = (method) => {
         case 'id':
             {
                 return [
-                    param('_id', 'Invalid id').isString().trim().stripLow()
+                    param('id', 'Invalid id').isString().trim().escape().stripLow()
                 ]
             }
+        case 'reg': 
+        {
+            return [
+                param('reg', 'Invalid Vehicle Registration').isString().trim().isLength({max: 7}).escape().stripLow()
+            ]
+        }
         case 'user':
             {
                 return [
-                    check('name').isString().trim().escape(),
-                    check('email').isEmail().normalizeEmail(),
-                    check('password').isLength({ min: 6 }).trim()
+                    check('name', 'Invalid name').isString().trim().escape().stripLow().exists({checkFalsy: true}), //.checkFalsy: if true, fields with falsy values (eg "", 0, false, null) will also not exist,
+                    check('email', 'Invalid email address').isEmail().normalizeEmail().exists({checkFalsy: true}),
+                    check('password', 'Password must be at least 6 characters').isLength({ min: 6 }).trim(),
+                    check('secret', 'Invalid Secret').isString().optional(),
+                    check('role', 'You cant manually set a role').isEmpty({checkFalsy: true})
                 ]
-            }
+            }   
         case 'login':
             {
                 return [

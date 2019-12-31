@@ -3,77 +3,85 @@
 const Appt = require('../model/Appointment');
 const { validationResult } = require('express-validator');
 
+/** Check if user is owner of appt */
+const _checkIfOwner = (appt, user) => {
+    if (appt.user === user._id) { return true; } 
+    return false;
+}
+
+/** Create Appointment */
 const createAppt = async (req, res, next) => {
     try {
         const validationErrs = validationResult(req);
         if (!validationErrs.isEmpty()) {
             return res.status(400).send(validationErrs)
         }
-        const appt = new Appt(req.body);
+        const appt = new Appt({...req.body, user: req.user._id});
         const savedAppt = await appt.save();
-        res.send({ appt: appt._id });
+        res.send({created: appt});
     } catch (err) {
         res.status(400).send(err);
     }
 }
 
+/** Delete Appointment */
 const delAppt = (req, res, next) => {
-    try {
-        Appt.deleteOne({ _id: req.params.id })
-            .exec((err, appt) => {
-                if (err) throw err;
-                if (appt.deletedCount > 0) {
-                    res.send({ deleted: req.params.id })
-                } else {
-                    res.status(400).send({ error: 'Unable to delete appointment ' + req.params.id })
-                }
-            })
-    } catch (err) {
-        res.status(400).send(err);
+    const validationErrs = validationResult(req);
+    if (!validationErrs.isEmpty()) {
+        return res.status(400).send(validationErrs)
     }
+
+    Appt.findById(req.params.id)
+    .exec((err, appt) => {
+        /** Check for errors or if no appointment found */
+        if (err || !appt) return res.status(400).send({ error: 'No appointment found with id ' + req.params.id })
+        /** Check Ownership */
+        let isOwner = _checkIfOwner(appt.user.toString(), req.user._id.toString());    
+        if (!isOwner) return res.status(400).send({ error: 'Cant modify another users appointment' }) 
+        /* Remove appointment */
+        appt.remove(err => {
+            if (err) return res.status(500).send({error: 'Unable to delete appointment: ' + req.params.id})
+            res.send({deleted: appt})
+        })
+    })
 }
 
+/** Update Appointment */
 const updateAppt = (req, res, next) => {
-    try {
-        Appt.findOneAndUpdate({ _id: req.params.id },
+    Appt.findById(req.params.id)
+    .exec((err, appt) => {
+        /** Check for errors or if no appointment found */
+        if (err || !appt) return res.status(400).send({ error: 'No appointment found with id ' + req.params.id })
+        
+        /** Check Ownership */
+        let isOwner = _checkIfOwner(appt.user.toString(), req.user._id.toString());    
+        if (!isOwner) return res.status(400).send({ error: 'Cant modify another users appointment' }) 
+        
+        /** Update appointment */
+        appt.update({upsert: false},
             req.body,
             (err, appt) => {
-                if (err) throw err;
-                if (appt) {
+                if (err || !appt) return res.status(400).send({ error: 'No appointment found with id ' + req.params.id })
                     res.send({ updated: req.params.id })
-                } else {
-                    res.status(400).send({ error: 'No appointment found with id ' + req.params.id })
-                }
-            });
-    } catch (err) {
-        res.status(400).send(err);
-    }
+        });
+    })
 }
 
-
+/** Get Appointments */
 const getAppts = (req, res, next) => {
-    try {
-        Appt.find({}, (err, appts) => {
-            if (err) throw err;
-            res.send(appts);
-        })
-    } catch (err) {
-        res.status(400).send(err);
-    }
+    Appt.find({}, (err, appts) => {
+        if (err || appts.length < 1) return res.status(400).send({ error: 'No appointments found' });
+        res.send(appts);
+    })
 }
 
+/** Get Appointment by ID */
 const getAppt = (req, res, next) => {
-    try {
-        Appt.find({ _id: req.params.id }, (err, appt) => {
-            if (err) throw err;
-            if (appt.length < 1) {
-                return res.status(400).send({ error: 'No appointment found with id ' + req.params.id })
-            }
-            res.send(appt);
-        })
-    } catch (err) {
-        res.status(400).send(err);
-    }
+    Appt.find({ _id: req.params.id }, 
+        (err, appt) => {
+        if (err || !appt || appt.length < 1 ) return res.status(400).send({ error: 'No appointment found with id ' + req.params.id })
+        res.send(appt);
+    })
 }
 
 module.exports = {
@@ -82,5 +90,4 @@ module.exports = {
     updateAppt: updateAppt,
     getAppts: getAppts,
     getAppt: getAppt
-
 }

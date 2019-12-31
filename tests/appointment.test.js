@@ -1,79 +1,101 @@
 "use strict";
 
-//During the test the env variable is set to test
+/** Set env variable to test */
 process.env.NODE_ENV = 'test';
 
-//Require the dev-dependencies
+/** Require the dev-dependencies */
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 let app = require('../app');
 let should = chai.should();
 let faker = require('faker');
-
-
 chai.use(chaiHttp);
 
-describe('### Appointment Test Suite', () => {
-    let fakeUser = {
-        name: faker.name.findName(),
-        email: faker.internet.email(),
-        password: faker.internet.password(),
-        token: ""
-    };
-    let apptId = "";
+/** Helper functions */ 
+const genUser = () => {
+    return {
+            name: faker.name.findName(),
+            email: faker.internet.email(),
+            password: faker.internet.password(),
+            token: ""
+    }
+}
+const genAppt = () => {
+    return {
+        apptDate: "2019-11-01T22:34:50.138+00:00",
+        customer: {
+            name: "james",
+            email: "james@email.com",
+            phone: "07444555666",
+            altPhone: "01514569872"
+        },
+        car: {
+            registration: "MD56AHR",
+            make: "FORD",
+            model: "FOCUS",
+            firstUsed: "",
+            fuelType: "Petrol",
+            color: "Yellow",
+            vehicleId: "4tq319nvklz+25irauo79w==",
+            regDate: "2010-11-13T00:00:00.000+00:00",
+            manufacDate: "2010-11-13T00:00:00.000+00:00",
+            engineSize: 1800
+        }
+    }
+}
 
-    before((done) => {
+/** Test suite */ 
+describe('### Appointment Test Suite', () => {
+    /** Create dummy data objects */
+    const fakeAppt = genAppt();
+    const fakeUser = genUser();
+    const fakeAdmin = genUser();
+    fakeAdmin.secret = process.env.TEST_SECRET
+    
+    /** Create basic user */ 
+    before(done => {
         chai.request(app)
             .post('/api/users')
             .send(fakeUser)
             .end((err, res) => {
                 fakeUser.token = res.body.token;
-                done();
-            })
+                done()
+            });
     })
-    /* Test the POST /api/appt/new route  */
-    describe('# POST /api/appt/new', () => {
-        it('it should return an object containing an appointment ID', (done) => {
+    /** Create admin user */ 
+    before(done => {
+        chai.request(app)
+        .post('/api/users')
+        .send(fakeAdmin)
+        .end((err, res) => {
+            fakeAdmin.token = res.body.token;
+            done();
+        })
+    })
+
+    /* Test the create new appointment route */
+    describe('# POST /api/appts', () => {
+        it('returns an appointment object', (done) => {
             chai.request(app)
-                .post('/api/appt/new')
-                .send({
-                    apptDate: "2019-11-01T22:34:50.138+00:00",
-                    apptTime: "2019-11-01T22:34:50.138+00:00",
-                    customer: {
-                        name: "james",
-                        email: "james@email.com",
-                        phone: "07444555666",
-                        altPhone: "01514569872"
-                    },
-                    car: {
-                        registration: "MD56AHR",
-                        make: "FORD",
-                        model: "FOCUS",
-                        firstUsed: "",
-                        fuelType: "Petrol",
-                        color: "Yellow",
-                        vehicleId: "4tq319nvklz+25irauo79w==",
-                        regDate: "2010-11-13T00:00:00.000+00:00",
-                        manufacDate: "2010-11-13T00:00:00.000+00:00",
-                        engineSize: 1800
-                    }
-                })
+                .post('/api/appts')
+                .set('Authorization', 'Bearer ' + fakeUser.token)
+                .send(fakeAppt)
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.be.an('object');
-                    res.body.appt.should.have.lengthOf(24);
-
-                    apptId = res.body.appt; // set id for testing other routes
+                    res.body.created._id.should.have.lengthOf(24);
+                    res.body.created.customer.name.should.equal(fakeAppt.customer.name)
+                    res.body.created.car.registration.should.equal(fakeAppt.car.registration)
+                    res.body.created.user.should.have.lengthOf(24);
                     done();
                 });
         });
-
-        it('it should return an error if missing required fields', (done) => {
+        it('returns an error if missing required fields', (done) => {
             chai.request(app)
-                .post('/api/appt/new')
+                .post('/api/appts')
+                .set('Authorization', 'Bearer ' + fakeUser.token)
                 .send({
-                    apptDate: "2019-11-01T22:34:50.138+00:00",
-                    apptTime: "2019-11-01T22:34:50.138+00:00"
+                    apptDate: fakeAppt.apptDate
                 })
                 .end((err, res) => {
                     res.should.have.status(400)
@@ -83,12 +105,12 @@ describe('### Appointment Test Suite', () => {
         })
     });
 
-    /* Test the GET /api/appt route  */
-    describe('# GET /api/appt', () => {
-        it('it should return an array of appointment objects', (done) => {
+    /* Test the View all appointments route */
+    describe('# GET /api/appts', () => {
+        it('returns an array of appointment objects', (done) => {
             chai.request(app)
-                .get('/api/appt/')
-                .set('Authorization', 'Bearer ' + fakeUser.token)
+                .get('/api/appts')
+                .set('Authorization', 'Bearer ' + fakeAdmin.token)
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.be.an('array');
@@ -100,9 +122,9 @@ describe('### Appointment Test Suite', () => {
                     done();
                 });
         });
-        it('it should error if no auth token', (done) => {
+        it('returns an error if no auth token', (done) => {
             chai.request(app)
-                .get('/api/appt/')
+                .get('/api/appts/')
                 .end((err, res) => {
                     res.should.have.status(401);
                     res.body.should.be.an('object');
@@ -112,11 +134,22 @@ describe('### Appointment Test Suite', () => {
         })
     });
 
-    /* Test the GET /api/appt/:id route  */
-    describe('# GET /api/appt/:id', () => {
-        it('it should return an appointment object', (done) => {
+    /* Test the View Single appointment route */
+    describe('# GET /api/appts/:id', () => {
+        /** Create an apointment */ 
+        before(done => {
             chai.request(app)
-                .get('/api/appt/' + apptId)
+                .post('/api/appts')
+                .set('Authorization', 'Bearer ' + fakeUser.token)
+                .send(fakeAppt)
+                .end((err, res) => {
+                    fakeAppt.id = res.body.created._id; // save the appointment id of newly created appointment 
+                    done()
+                });
+        })
+        it('returns an appointment object', (done) => {
+            chai.request(app)
+                .get('/api/appts/' + fakeAppt.id)
                 .set('Authorization', 'Bearer ' + fakeUser.token)
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -126,14 +159,14 @@ describe('### Appointment Test Suite', () => {
                     res.body[0].customer.email.should.be.a('string');
                     res.body[0].customer.phone.should.be.a('string');
                     res.body[0].car.registration.should.be.a('string');
-                    res.body[0]._id.should.equal(apptId);
+                    res.body[0]._id.should.equal(fakeAppt.id);
                     res.body[0]._id.should.have.lengthOf(24);
                     done();
                 });
         });
-        it('it should error if appt object can\'t be found by id', (done) => {
+        it('returns an error if appt object can\'t be found by id', (done) => {
             chai.request(app)
-                .get('/api/appt/' + '5dbd9d4a87ea9330909fc416')
+                .get('/api/appts/' + '5dbd9d4a87ea9330909fc416')
                 .set('Authorization', 'Bearer ' + fakeUser.token)
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -145,15 +178,15 @@ describe('### Appointment Test Suite', () => {
         })
     });
 
-    /* Test the UPDATE /api/appt/:id route  */
-    describe('# UPDATE /api/appt/:id', () => {
-        it('it should return an appointment object', (done) => {
+    /* Test the update appointment route */
+    describe('# UPDATE /api/appts/:id', () => {
+        it('returns an appointment object', (done) => {
             chai.request(app)
-                .get('/api/appt/')
-                .set('Authorization', 'Bearer ' + fakeUser.token)
+                .get('/api/appts/')
+                .set('Authorization', 'Bearer ' + fakeAdmin.token)
                 .end((err, res) => {
                     chai.request(app)
-                        .put('/api/appt/' + res.body[0]._id)
+                        .put('/api/appts/' + res.body[0]._id)
                         .set('Authorization', 'Bearer ' + fakeUser.token)
                         .send({
                             customer: {
@@ -172,69 +205,62 @@ describe('### Appointment Test Suite', () => {
                         .end((err, res) => {
                             res.should.have.status(200);
                             res.body.should.be.an('object');
+                            res.body.updated.should.be.a('string');
+                            res.body.updated.should.have.lengthOf(24);;
                             done();
                         });
                 })
         });
-
-        it('should error if no appointment exists', (done) => {
+        it('returns an error if no appointment exists', (done) => {
             chai.request(app)
-                .get('/api/appt/')
+                .put('/api/appts/5dc4a954d2c31904e8de652c')
                 .set('Authorization', 'Bearer ' + fakeUser.token)
-                .end((err, res) => {
-                    chai.request(app)
-                        .put('/api/appt/5dc4a954d2c31904e8de652c')
-                        .set('Authorization', 'Bearer ' + fakeUser.token)
-                        .send({
-                            customer: {
-                                name: "THIS WAS UPDATED AGAIN"
-                            }
-                        })
-                        .end((err, res) => {
-                            res.should.have.status(400);
-                            res.body.should.be.an('object');
-                            res.body.error.should.match(/^No appointment found with id/);
-                            done();
-                        });
+                .send({
+                    customer: {
+                        name: "THIS WAS UPDATED AGAIN"
+                    }
                 })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.be.an('object');
+                    res.body.error.should.match(/^No appointment found with id/);
+                    done();
+                });
         })
     });
 
-    /* Test the DELETE /api/appt/:id route  */
-    describe('# DELETE /api/appt/:id', () => {
-        it('it should return an appointment object', (done) => {
+    /* Test the delete appointment route */
+    describe('# DELETE /api/appts/:id', () => {
+        it('returns an appointment object', (done) => {
             chai.request(app)
-                .get('/api/appt/')
+                .post('/api/appts')
                 .set('Authorization', 'Bearer ' + fakeUser.token)
-                .end((err, res) => {
+                .send(fakeAppt)
+                .end((err, res) => {                  
                     chai.request(app)
-                        .delete('/api/appt/' + res.body[0]._id)
+                        .delete('/api/appts/' + res.body.created._id)
                         .set('Authorization', 'Bearer ' + fakeUser.token)
                         .end((err, res) => {
                             res.should.have.status(200);
                             res.body.should.be.an('object');
+                            res.body.deleted.should.be.an('object')
+                            res.body.deleted.customer.name.should.equal(fakeAppt.customer.name)
+                            res.body.deleted.car.registration.should.equal(fakeAppt.car.registration)
                             done();
                         });
                 })
-
         });
-        it('should error if no appointment exists', (done) => {
+        it('returns an error if no appointment exists', (done) => {
             chai.request(app)
-                .get('/api/appt/')
+                .delete('/api/appts/5dc4a954d2c31904e8de652c')
                 .set('Authorization', 'Bearer ' + fakeUser.token)
                 .end((err, res) => {
-                    chai.request(app)
-                        .delete('/api/appt/5dc4a954d2c31904e8de652c')
-                        .set('Authorization', 'Bearer ' + fakeUser.token)
-                        .end((err, res) => {
-                            res.should.have.status(400);
-                            res.body.should.be.an('object');
-                            res.body.error.should.match(/^Unable to delete appointment/);
-                            done();
-                        });
-                })
+                    res.should.have.status(400);
+                    res.body.should.be.an('object');
+                    res.body.error.should.match(/^No appointment found with id/);
+                    done();
+                });
         })
     });
+
 });
-
-

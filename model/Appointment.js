@@ -3,13 +3,11 @@
 const mongoose = require('mongoose');
 
 const apptSchema = new mongoose.Schema({
+    user: { // store the id of the user who created the appointment
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    }, 
     apptDate: {
-        type: Date,
-        default: Date.now,
-        required: true,
-        maxLength: 1024
-    },
-    apptTime: {
         type: Date,
         default: Date.now,
         required: true,
@@ -104,47 +102,47 @@ const apptSchema = new mongoose.Schema({
             maxLength: 10,
             trim: true,
             maxLength: 1024
-        }
-        // motTests: [{
-        //     completedDate: {
-        //         type: Date,
-        //         default: Date.now
-        //     },
-        //     testResult: {
-        //         type: String
-        //     },
-        //     expiryDate: {
-        //         type: Date,
-        //         default: Date.now
-        //     },
-        //     odometerValue: {
-        //         type: Number
-        //     },
-        //     odometerUnit: {
-        //         type: String
-        //     },
-        //     odometerResultType: {
-        //         type: String
-        //     },
-        //     motTestNumber: {
-        //         type: String
-        //     },
-        //     rfrAndComments: [{
-        //         text: {
-        //             type: String
-        //         },
-        //         type: {
-        //             type: String
-        //         },
-        //         dangerous: {
-        //             type: Boolean
-        //         }
-        //     }]
-        // }]
+        },
+        motTests: [{
+            completedDate: {
+                type: Date,
+                default: Date.now
+            },
+            testResult: {
+                type: String
+            },
+            expiryDate: {
+                type: Date,
+                default: Date.now
+            },
+            odometerValue: {
+                type: Number
+            },
+            odometerUnit: {
+                type: String
+            },
+            odometerResultType: {
+                type: String
+            },
+            motTestNumber: {
+                type: String
+            },
+            rfrAndComments: [{
+                text: {
+                    type: String
+                },
+                type: {
+                    type: String
+                },
+                dangerous: {
+                    type: Boolean
+                }
+            }]
+        }]
     }
-
-
-
 });
 
-module.exports = mongoose.model('Appointment', apptSchema);
+
+const Appt = mongoose.model('Appointment', apptSchema)
+
+module.exports = Appt;

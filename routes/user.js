@@ -1,11 +1,7 @@
 "use strict";
 
 const router = require('express').Router();
-const User = require('../model/User');
-const jwt = require('jsonwebtoken');
-const auth = require('../middleware/auth');
-const bcrypt = require('bcryptjs');
-const { header, check, validationResult } = require('express-validator');
+const {requiresLogin} = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const userCtrl = require('../controllers/user.js');
 
@@ -16,12 +12,12 @@ router.post('/', validate('user'), userCtrl.createUser)
 router.post('/login', validate('login'), userCtrl.login)
 
 /** View logged in user profile */
-router.get('/me', auth, userCtrl.viewProfile)
+router.get('/me', requiresLogin, userCtrl.viewProfile)
 
 /** Log user out of the application */
-router.post('/me/logout', validate('authHeader'), auth, userCtrl.logout)
+router.post('/me/logout', validate('authHeader'), requiresLogin, userCtrl.logout)
 
 /** Log user out of all devices */
-router.post('/me/logoutall', validate('authHeader'), auth, userCtrl.logoutAll)
+router.post('/me/logoutall', validate('authHeader'), requiresLogin, userCtrl.logoutAll)
 
 module.exports = router;

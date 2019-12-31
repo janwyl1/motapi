@@ -22,7 +22,7 @@ let fakeUser = {
 describe('### User Test Suite', () => {
     /** Test the POST /api/users route  */
     describe('# POST /api/users', () => {
-        it('it should return an object containing an id, name, email and token', (done) => {
+        it('returns an object containing an id, name, email and token', (done) => {
             chai.request(app)
                 .post('/api/users')
                 .send(fakeUser)
@@ -38,7 +38,7 @@ describe('### User Test Suite', () => {
                     done();
                 });
         });
-        it('it should error if missing required fields', (done) => {
+        it('returns an error if missing required fields', (done) => {
             chai.request(app)
                 .post('/api/users')
                 .send({
@@ -48,11 +48,11 @@ describe('### User Test Suite', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.be.an('object');
-                    res.body.error.should.equal('Validation failed for name field');
+                    res.body.error[0].msg.should.equal('Invalid name');
                     done();
                 });
         });
-        it('it should error if not a valid email', (done) => {
+        it('returns an error if not a valid email', (done) => {
             chai.request(app)
                 .post('/api/users')
                 .send({
@@ -63,15 +63,68 @@ describe('### User Test Suite', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.be.an('object');
-                    res.body.error.should.equal('Validation failed for email field');
+                    res.body.error[0].msg.should.equal('Invalid email address');
                     done();
                 });
         });
+        it('returns an error if email already exists', (done) => {
+            chai.request(app)
+            .post('/api/users')
+            .send({
+                name: "dave",
+                email: fakeUser.email,
+                password: fakeUser.password
+            }).end((err, res) => {
+                res.should.have.status(400);
+                res.body.should.be.an('object');
+                res.body.error.should.equal('Email already exists');
+                done();
+            });
+        });
+        it('creates admin user if correct secret provided', (done) => {
+            chai.request(app)
+            .post('/api/users')
+            .send({
+                name: faker.name.findName(),
+                email: faker.internet.email(),
+                password: faker.internet.password(),
+                secret: process.env.TEST_SECRET
+            })
+            .end((err, res) => {
+                res.should.have.status(201);
+                res.body.should.be.an('object');
+                res.body.user._id.should.be.a('string');
+                res.body.user.name.should.be.a('string');
+                res.body.user.email.should.be.a('string');
+                res.body.user.role.should.equal('admin');
+                res.body.token.should.be.a('string');
+                should.not.exist(res.body.password); // don't return a password in the response
+                should.not.exist(res.body.user.password);
+                done();
+            })
+        })
+        it('returns an error if secret incorrect', (done) => {
+            chai.request(app)
+            .post('/api/users')
+            .send({
+                name: faker.name.findName(),
+                email: faker.internet.email(),
+                password: faker.internet.password(),
+                secret: "incorrectsecret"
+            })
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.body.should.be.an('object');
+                res.body.error.should.equal('Incorrect secret');
+                done();
+            })
+        })
+
     });
 
     /** Test the POST /api/users/login route  */
     describe('# POST /api/users/login', () => {
-        it('it should return an object containing an id, name, email and token', (done) => {
+        it('returns an object containing an id, name, email and token', (done) => {
             chai.request(app)
                 .post('/api/users/login')
                 .send({
@@ -90,7 +143,7 @@ describe('### User Test Suite', () => {
                     done();
                 });
         });
-        it('it should error if missing required fields', (done) => {
+        it('returns an error if missing required fields', (done) => {
             chai.request(app)
                 .post('/api/users/login')
                 .send({
@@ -102,7 +155,7 @@ describe('### User Test Suite', () => {
                     done();
                 });
         });
-        it('it should error if email incorrect', (done) => {
+        it('returns an error if email incorrect', (done) => {
             chai.request(app)
                 .post('/api/users/login')
                 .send({
@@ -117,7 +170,7 @@ describe('### User Test Suite', () => {
                     done();
                 });
         });
-        it('it should error if password incorrect', (done) => {
+        it('returns an error if password incorrect', (done) => {
             chai.request(app)
                 .post('/api/users/login')
                 .send({
@@ -136,7 +189,7 @@ describe('### User Test Suite', () => {
 
     /** Test the GET /api/users/me route  */
     describe('# GET /api/users/me', () => {
-        it('it should return an object containing an id, name and email', (done) => {
+        it('returns an object containing an id, name and email', (done) => {
             chai.request(app)
                 .post('/api/users/login')
                 .send(fakeUser)
@@ -158,7 +211,7 @@ describe('### User Test Suite', () => {
                 })
             done();
         });
-        it('it should error if no auth token', (done) => {
+        it('returns an error if no auth token', (done) => {
             chai.request(app)
                 .get('/api/users/me')
                 .end((err, res) => {
@@ -169,7 +222,7 @@ describe('### User Test Suite', () => {
                     done();
                 });
         });
-        it('it should error if missing required fields', (done) => {
+        it('returns an error if missing required fields', (done) => {
             chai.request(app)
                 .get('/api/users/me').end((err, res) => {
                     res.should.have.status(401);
@@ -181,7 +234,7 @@ describe('### User Test Suite', () => {
 
     /** Test the POST /api/users/me/logout route  */
     describe('# POST /api/users/me/logout', () => {
-        it('it should return an object confirming logout', (done) => {
+        it('returns an object confirming logout', (done) => {
             chai.request(app)
                 .post('/api/users/') // register as new user first
                 .send({ // create a new fake user
@@ -202,7 +255,7 @@ describe('### User Test Suite', () => {
                         })
                 })
         });
-        it('it should error if no auth token', (done) => {
+        it('returns an error if no auth token', (done) => {
             chai.request(app)
                 .post('/api/users/me/logout')
                 .end((err, res) => {
@@ -217,7 +270,7 @@ describe('### User Test Suite', () => {
 
     /** Test the POST /api/users/me/logoutall route */
     describe('# POST /api/users/me/logoutall', () => {
-        it('it should return an object confirming logout', (done) => {
+        it('returns an object confirming logout', (done) => {
             chai.request(app) // register as new user first
                 .post('/api/users/')
                 .send({ // create a new fake user
@@ -238,7 +291,7 @@ describe('### User Test Suite', () => {
                         })
                 })
         });
-        it('it should error if no auth token', (done) => {
+        it('returns an error if no auth token', (done) => {
             chai.request(app)
                 .post('/api/users/me/logoutall')
                 .end((err, res) => {

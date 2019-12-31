@@ -3,7 +3,7 @@
 const jwt = require('jsonwebtoken')
 const User = require('../model/User')
 
-const auth = async(req, res, next) => {
+const requiresLogin = async(req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
         const data = jwt.verify(token, process.env.JWT_KEY)
@@ -18,4 +18,15 @@ const auth = async(req, res, next) => {
     }
 }
 
-module.exports = auth
+const isAdmin = (req, res, next) => {
+    if (req.user.role === "admin") {
+        next();
+    } else {
+        res.status(401).send({ error: "Not permitted to perform this action"})
+    }
+}
+
+module.exports = {
+    requiresLogin: requiresLogin,
+    isAdmin: isAdmin
+}

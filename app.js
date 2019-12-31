@@ -1,20 +1,21 @@
 "use strict";
-
+/** Import Dependencies */
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-// const expressValidator = require('express-validator');
+const path = require('path');
 
-// Import Routes
+/** Import Routes */
 const userRoute = require('./routes/user');
 const apptRoute = require('./routes/appointment');
+const lookupRoute = require('./routes/lookup');
 
-// config
-dotenv.config();
+/** Config */
+dotenv.config({ path: path.resolve(__dirname, `./${process.env.NODE_ENV}.env`)}); // choose  *.env file for environment specified in package.json
 const PORT = 3000;
 
-// Connect to DB
+/** Connect to DB */
 mongoose.connect(
 	process.env.DB_CONNECT, 
 	{
@@ -22,28 +23,36 @@ mongoose.connect(
     useCreateIndex: true,
     useUnifiedTopology: true,
     useFindAndModify: false
-	},
-	() => {
-		console.log("Connected to db!");
-	}
-);
+	}	
+).then(() => console.log("Connected to db!"))
+.catch(err => console.log('Db connection failed: ' + err));
 
-
-// Middleware
+/** Middleware */
 app.use(express.json()); // body parser
-// app.use(expressValidator()); // express validator
 
-// Route middlewares
+/** Route middleware */
 app.use('/api/users', userRoute);
-app.use('/api/appt', apptRoute);
+app.use('/api/appts', apptRoute);
+app.use('/api/lookup', lookupRoute);
 
-app.use((err, req, res, next) => {
-	// res.status(500).send(err);
-  res.status(500).send({error: err.message});
+/** Handle 404 Errors */  
+app.use((req, res, next) => {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+/** Error Handler */
+app.use((err, req, res) => {
+  res.status(err.status || 500);
+  res.json({'errors': {
+    message: err.message,
+    error: {}
+  }});
 });
 
+/** Start App */
 app.listen(PORT, ()=>{
-	console.log('Running on port: ',PORT);
+	console.log('Running on port: ', PORT);
 });
 
 module.exports = app;

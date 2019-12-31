@@ -1,24 +1,23 @@
 "use strict";
 
 const router = require('express').Router();
-const Appt = require('../model/Appointment');
 const apptCtrl = require('../controllers/appointment');
-const auth = require('../middleware/auth');
+const {requiresLogin, isAdmin} = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 /** Create new appointment */
-router.post('/new', validate('appt'), apptCtrl.createAppt);
+router.post('/', validate('appt'), requiresLogin, apptCtrl.createAppt);
 
 /** Delete appointment matching :id */
-router.delete('/:id', validate('id'), auth, apptCtrl.delAppt);
+router.delete('/:id', validate('id'), requiresLogin, apptCtrl.delAppt);
 
 /** Update appointment matching :id */
-router.put('/:id', validate('id'), validate('appt'), auth, apptCtrl.updateAppt);
+router.put('/:id', validate('id'), validate('appt'), requiresLogin, apptCtrl.updateAppt);
 
 /** GET all appointments */
-router.get('/', auth, apptCtrl.getAppts);
+router.get('/', requiresLogin, isAdmin, apptCtrl.getAppts);
 
 /** GET appointment matching :id */
-router.get('/:id', auth, apptCtrl.getAppt);
+router.get('/:id', validate('id'), requiresLogin, apptCtrl.getAppt);
 
 module.exports = router;
