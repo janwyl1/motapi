@@ -29,7 +29,17 @@ const validate = (method) => {
                     check('car.vehicleId', 'Invalid vehicle id').optional().isString().trim().escape().stripLow(),
                     check('car.regDate', 'Invalid registration date').optional().isString().trim().escape().stripLow(),
                     check('car.manufacDate', 'Invalid manufacture date').optional().isString().trim().escape().stripLow(),
-                    check('car.engineSize', 'Invalid engine size').optional().isNumeric().trim().escape().stripLow()
+                    check('car.engineSize', 'Invalid engine size').optional().isNumeric().trim().escape().stripLow(),
+                    check('car.motTests.*.completedDate', 'Invalid completed date').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.testResult', 'Invalid test result').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.expiryDate', 'Invalid expiry date').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.odometerValue', 'Invalid odometer value').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.odometerUnit', 'Invalid odometer unit').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.ododometerResultType', 'Invalid odometer result tyle').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.motTestNumber', 'Invalid MOT test number').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.rfrAndComments.*.text', 'Invalid MOT test number').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.rfrAndComments.*.type', 'Invalid MOT test number').optional().isString().trim().escape().stripLow(),
+                    check('car.motTests.*.rfrAndComments.*.dangerous', 'Invalid MOT test number').optional().isBoolean().trim().escape().stripLow(),
                 ]
             }
         case 'id':

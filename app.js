@@ -41,7 +41,7 @@ app.use((req, res, next) => {
   err.status = 404;
   next(err);
 });
-/** Error Handler */
+/** Display Errors */
 app.use((err, req, res) => {
   res.status(err.status || 500);
   res.json({'errors': {
