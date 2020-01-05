@@ -1,12 +1,12 @@
 "use strict";
-const { param, header, check } = require('express-validator');
+const { param, header, check, validationResult } = require('express-validator');
 
 const isValidDate = (value) => {
     const regex = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
     return regex.test(value);
 }
 const isValidReg = (value) => {
-    const regex = /(^[A-Z]{2}[0-9]{2}\s?[A-Z]{3}$)|(^[A-Z][0-9]{1,3}\s?[A-Z]{3}$)|(^[A-Z]{3}\s?[0-9]{1,3}[A-Z]$)|(^[0-9]{1,4}\s?[A-Z]{1,2}$)|(^[0-9]{1,3}\s?[A-Z]{1,3}$)|(^[A-Z]{1,2}\s?[0-9]{1,4}$)|(^[A-Z]{1,3}\s?[0-9]{1,3}$)/;
+    const regex = /(^[A-Z]{2}[0-9]{2}\s?[A-Z]{3}$)|(^[A-Z][0-9]{1,3}\s?[A-Z]{3}$)|(^[A-Z]{3}\s?[0-9]{1,3}[A-Z]$)|(^[0-9]{1,4}\s?[A-Z]{1,2}$)|(^[0-9]{1,3}\s?[A-Z]{1,3}$)|(^[A-Z]{1,2}\s?[0-9]{1,4}$)|(^[A-Z]{1,3}\s?[0-9]{1,3}$)/i;
     return regex.test(value);
 }
 
@@ -51,7 +51,7 @@ const validate = (method) => {
         case 'reg': 
         {
             return [
-                param('reg', 'Invalid Vehicle Registration').isString().trim().isLength({max: 7}).escape().stripLow()
+                param('reg', 'Invalid Vehicle Registration').isString().trim().custom(isValidReg).isLength({max: 7}).escape().stripLow()
             ]
         }
         case 'user':
@@ -71,7 +71,6 @@ const validate = (method) => {
                     check('password').isLength({ min: 6 }).trim()
                 ]
             }
-
         case 'authHeader':
             {
                 return [
@@ -82,4 +81,18 @@ const validate = (method) => {
     }
 }
 
-module.exports = validate
+
+const handleValidationErrs = async (req, res, next) => {
+    const validationErrs = await validationResult(req);
+    if (!validationErrs.isEmpty()) {
+        return res.status(400).send(validationErrs)
+    } 
+    next();
+}
+
+
+
+module.exports = {
+    validate: validate,
+    handleValidationErrs: handleValidationErrs
+}

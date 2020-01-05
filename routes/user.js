@@ -2,7 +2,7 @@
 
 const router = require('express').Router();
 const {requiresLogin} = require('../middleware/auth');
-const validate = require('../middleware/validate');
+const {validate} = require('../middleware/validate');
 const userCtrl = require('../controllers/user.js');
 
 /** Create a new user */

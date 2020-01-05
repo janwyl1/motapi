@@ -153,14 +153,13 @@ describe('### Appointment Test Suite', () => {
                 .set('Authorization', 'Bearer ' + fakeUser.token)
                 .end((err, res) => {
                     res.should.have.status(200);
-                    res.body.should.be.an('array');
-                    res.body[0].should.be.an('object');
-                    res.body[0].customer.name.should.be.a('string');
-                    res.body[0].customer.email.should.be.a('string');
-                    res.body[0].customer.phone.should.be.a('string');
-                    res.body[0].car.registration.should.be.a('string');
-                    res.body[0]._id.should.equal(fakeAppt.id);
-                    res.body[0]._id.should.have.lengthOf(24);
+                    res.body.should.be.an('object');
+                    res.body.customer.name.should.be.a('string');
+                    res.body.customer.email.should.be.a('string');
+                    res.body.customer.phone.should.be.a('string');
+                    res.body.car.registration.should.be.a('string');
+                    res.body._id.should.equal(fakeAppt.id);
+                    res.body._id.should.have.lengthOf(24);
                     done();
                 });
         });
@@ -180,6 +179,21 @@ describe('### Appointment Test Suite', () => {
 
     /* Test the update appointment route */
     describe('# UPDATE /api/appts/:id', () => {
+        const dummyUpdate = {
+            apptDate: "2019-11-01T22:34:50.138Z",
+            customer: {
+                name: "THIS WAS UPDATED",
+                email: "updated@email.com",
+                phone: "075656498956"
+            },
+            car: {
+                registration: "YY69ETR",
+                make: "RENAULT",
+                model: "CLIO",
+                fuelType: "Diesel",
+                engineSize: 3600
+            }
+        }
         it('returns an appointment object', (done) => {
             chai.request(app)
                 .get('/api/appts/')
@@ -188,20 +202,7 @@ describe('### Appointment Test Suite', () => {
                     chai.request(app)
                         .put('/api/appts/' + res.body[0]._id)
                         .set('Authorization', 'Bearer ' + fakeUser.token)
-                        .send({
-                            customer: {
-                                name: "THIS WAS UPDATED",
-                                email: "updated@email.com",
-                                phone: "075656498956"
-                            },
-                            car: {
-                                registration: "YY694TR",
-                                make: "RENAULT",
-                                model: "CLIO",
-                                fuelType: "Diesel",
-                                engineSize: 3600
-                            }
-                        })
+                        .send(dummyUpdate)
                         .end((err, res) => {
                             res.should.have.status(200);
                             res.body.should.be.an('object');
@@ -215,11 +216,7 @@ describe('### Appointment Test Suite', () => {
             chai.request(app)
                 .put('/api/appts/5dc4a954d2c31904e8de652c')
                 .set('Authorization', 'Bearer ' + fakeUser.token)
-                .send({
-                    customer: {
-                        name: "THIS WAS UPDATED AGAIN"
-                    }
-                })
+                .send(dummyUpdate)
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.be.an('object');

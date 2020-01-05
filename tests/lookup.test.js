@@ -28,13 +28,9 @@ describe('### Lookup External API Test Suite', () => {
                     res.body[0].make.should.equal(dummyCar.make)
                     res.body[0].model.should.equal(dummyCar.model)
                     done();
-                       
                 })
         });
-    });
-    describe('#GET /api/lookup/', () => {
-        // Shows a generic 404 page because route api/lookup doesnt exist, only /api/lookup/:reg does
-        it('returns an error if missing reg', (done) => {
+        it('returns an error if missing reg', (done) => { // Shows a generic 404 page because route api/lookup doesnt exist, only /api/lookup/:reg does
             chai.request(app)
             .get('/api/lookup/')
             .end((err, res) => {
@@ -45,12 +41,24 @@ describe('### Lookup External API Test Suite', () => {
         });
         it('returns an error if invalid reg', (done) => {
             chai.request(app)
-            .get('/api/lookup/' + 'm1234')
+            .get('/api/lookup/' + '1')
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.body.should.be.an('object'); 
+                res.body.errors.should.be.an('array');
+                res.body.errors[0].value.should.equal('1');
+                res.body.errors[0].msg.should.equal('Invalid Vehicle Registration')
+                done();
+            })
+        });      
+        it('returns an error if no vehicle found', (done) => {
+            chai.request(app)
+            .get('/api/lookup/' + 'mt55wer')
             .end((err, res) => {
                 res.should.have.status(404);
                 res.body.should.be.an('object');   
                 res.body.httpStatus.should.equal("404")
-                res.body.errorMessage.should.equal("No MOT Tests found with vehicle registration : m1234")
+                res.body.errorMessage.should.equal("No MOT Tests found with vehicle registration : mt55wer")
                 done();
             })
         });      

@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 /** Create a User */
 const createUser = async (req, res) => {
     try {
-         // Validate errors
+        // Validate errors
         const validationErrs = validationResult(req);
         if (!validationErrs.isEmpty()) {
             return res.status(400).send({ error: {...validationErrs.errors.map((err)=> {
@@ -15,8 +15,7 @@ const createUser = async (req, res) => {
                 return err;
             })}});
         }
-        
-        // Set user role
+        // Set user role + determine if admin or basic user
         req.body.role = 'basic'; 
         if (req.body.secret) {
             // hash the submitted secret and compare it to hashed secret in .env            
