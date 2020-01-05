@@ -85,6 +85,10 @@ const validate = (method) => {
 const handleValidationErrs = async (req, res, next) => {
     const validationErrs = await validationResult(req);
     if (!validationErrs.isEmpty()) {
+        validationErrs.errors.map((err)=> {
+            if (err.param === "password") { delete err.value; } // avoid displaying the password in plain text
+            return err;
+        })
         return res.status(400).send(validationErrs)
     } 
     next();

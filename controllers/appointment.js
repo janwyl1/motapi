@@ -11,17 +11,18 @@ const _checkIfOwner = (appt, user) => {
 /** Create Appointment */
 const createAppt = async(req, res, next) => {
     try {
+        /** Create Appointment */
         const appt = new Appt({...req.body, user: req.user._id});
         const savedAppt = await appt.save();
         res.send({created: appt});  
     } catch (err) {
         res.status(400).send(err.message);
-        
     }
 }
 /** Get Appointments */
 const getAppts = async(req, res, next) => {
     try {
+        /** Find Appointment */
         const appts = await Appt.find({}).exec()
         if (!appts || appts.length < 1) throw new Error('No appointments found');
         res.send(appts);
@@ -33,8 +34,12 @@ const getAppts = async(req, res, next) => {
 /** Get Appointment by ID */
 const getAppt = async (req, res, next) => {
     try {
+        /** Find Appointment */
         const appt = await Appt.findById(req.params.id).exec()
         if (!appt || appt.length < 1 ) throw new Error('No appointment found with id ' + req.params.id)
+        /** Check Ownership */
+        const isOwner = await _checkIfOwner(appt.user.toString(), req.user._id.toString()) 
+        if (!isOwner) throw new Error('Cant modify another users appointment') 
         res.send(appt)
     }
     catch(err) {
@@ -45,7 +50,7 @@ const getAppt = async (req, res, next) => {
 /** Update Appointment */
 const updateAppt = async (req, res, next) => {
     try { 
-        /** Check for errors or if no appointment found */
+        /** Find Appointment */
         const appt = await Appt.findById(req.params.id).exec()
         if (!appt) throw new Error('No appointment found with id ' + req.params.id)
         /** Check Ownership */
@@ -64,17 +69,19 @@ const updateAppt = async (req, res, next) => {
 /** Delete Appointment */
 const delAppt = async(req, res, next) => {
     try {
+        /** Find Appointment */
         const appt = await Appt.findById(req.params.id).exec()
         if (!appt) throw new Error('No appointment found with id ' + req.params.id)
+        /** Check Ownership */
         const isOwner = await _checkIfOwner(appt.user.toString(), req.user._id.toString())
         if (!isOwner) throw new Error('Cant modify another users appointment') 
+        /** Delete appointment */
         const removedAppt = await appt.remove()
         // console.log(removedAppt)
         if (!removedAppt) throw new Error('Unable to delete appointment: ' + req.params.id)
         res.send({deleted: appt})
     }
     catch (err) {
-        // console.log(err);
         res.status(400).send({ error: err.message })
     }
 }

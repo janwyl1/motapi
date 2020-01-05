@@ -48,11 +48,11 @@ describe('### User Test Suite', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.be.an('object');
-                    res.body.error[0].msg.should.equal('Invalid name');
+                    res.body.errors[0].msg.should.equal('Invalid name');
                     done();
                 });
         });
-        it('returns an error if not a valid email', (done) => {
+        it('returns an error if invalid email', (done) => {
             chai.request(app)
                 .post('/api/users')
                 .send({
@@ -63,7 +63,7 @@ describe('### User Test Suite', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.be.an('object');
-                    res.body.error[0].msg.should.equal('Invalid email address');
+                    res.body.errors[0].msg.should.equal('Invalid email address');
                     done();
                 });
         });
@@ -150,7 +150,7 @@ describe('### User Test Suite', () => {
                     email: fakeUser.email
                 })
                 .end((err, res) => {
-                    res.should.have.status(401);
+                    res.should.have.status(400);
                     res.body.should.be.an('object');
                     done();
                 });
@@ -259,10 +259,10 @@ describe('### User Test Suite', () => {
             chai.request(app)
                 .post('/api/users/me/logout')
                 .end((err, res) => {
-                    res.should.have.status(401);
+                    res.should.have.status(400);
                     res.body.should.be.an('object');
-                    res.body.error.should.be.a('string');
-                    res.body.error.should.equal('Not authorized to access this resource');
+                    res.body.errors[0].msg.should.equal('Invalid value');
+                    res.body.errors[0].param.should.equal('authorization');
                     done();
                 });
         });
@@ -295,10 +295,10 @@ describe('### User Test Suite', () => {
             chai.request(app)
                 .post('/api/users/me/logoutall')
                 .end((err, res) => {
-                    res.should.have.status(401);
+                    res.should.have.status(400);
                     res.body.should.be.an('object');
-                    res.body.error.should.be.a('string');
-                    res.body.error.should.equal('Not authorized to access this resource');
+                    res.body.errors[0].msg.should.equal('Invalid value');
+                    res.body.errors[0].param.should.equal('authorization');
                     done();
                 });
         });

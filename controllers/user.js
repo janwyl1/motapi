@@ -8,13 +8,13 @@ const bcrypt = require('bcryptjs');
 const createUser = async (req, res) => {
     try {
         // Validate errors
-        const validationErrs = validationResult(req);
-        if (!validationErrs.isEmpty()) {
-            return res.status(400).send({ error: {...validationErrs.errors.map((err)=> {
-                if (err.param === "password") { delete err.value; } // avoid displaying the password in plain text
-                return err;
-            })}});
-        }
+        // const validationErrs = validationResult(req);
+        // if (!validationErrs.isEmpty()) {
+        //     return res.status(400).send({ error: {...validationErrs.errors.map((err)=> {
+        //         if (err.param === "password") { delete err.value; } // avoid displaying the password in plain text
+        //         return err;
+        //     })}});
+        // }
         // Set user role + determine if admin or basic user
         req.body.role = 'basic'; 
         if (req.body.secret) {
@@ -45,10 +45,10 @@ const createUser = async (req, res) => {
 /** Login */
 const login = async (req, res) => {
     try {
-        const validationErrs = validationResult(req);
-        if (!validationErrs.isEmpty()) {
-            return res.status(401).send({ error: 'Login failed! Check authentication credentials' })
-        }
+        // const validationErrs = validationResult(req);
+        // if (!validationErrs.isEmpty()) {
+        //     return res.status(401).send({ error: 'Login failed! Check authentication credentials' })
+        // }
         const { email, password } = req.body
         const user = await User.findByCredentials(email, password)
         if (!user) {
@@ -78,10 +78,6 @@ const viewProfile = async (req, res) => {
 /** Logout of single Session  */
 const logout = async (req, res) => {
     try {
-        const validationErrs = validationResult(req);
-        if (!validationErrs.isEmpty()) {
-            return res.status(401).send({ error: 'No Authorization header set' })
-        }
         req.user.tokens = req.user.tokens.filter((token) => {
             return token.token != req.token
         })
