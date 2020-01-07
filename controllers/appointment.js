@@ -11,7 +11,6 @@ const _checkIfOwner = (appt, user) => {
 /** Create Appointment */
 const createAppt = async(req, res, next) => {
     try {
-        /** Create Appointment */
         const appt = new Appt({...req.body, user: req.user._id});
         const savedAppt = await appt.save();
         res.send({created: appt});  
@@ -22,12 +21,11 @@ const createAppt = async(req, res, next) => {
 /** Get Appointments */
 const getAppts = async(req, res, next) => {
     try {
-        /** Find Appointment */
         const appts = await Appt.find({}).exec()
         if (!appts || appts.length < 1) throw new Error('No appointments found');
         res.send(appts);
     } catch(err) {
-        res.status(400).send({ error: err.message })
+        return res.status(400).send({ error: err.message })
     }
 }
 
@@ -77,7 +75,6 @@ const delAppt = async(req, res, next) => {
         if (!isOwner) throw new Error('Cant modify another users appointment') 
         /** Delete appointment */
         const removedAppt = await appt.remove()
-        // console.log(removedAppt)
         if (!removedAppt) throw new Error('Unable to delete appointment: ' + req.params.id)
         res.send({deleted: appt})
     }
@@ -85,7 +82,6 @@ const delAppt = async(req, res, next) => {
         res.status(400).send({ error: err.message })
     }
 }
-
 
 module.exports = {
     createAppt: createAppt,
