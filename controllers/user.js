@@ -7,19 +7,16 @@ const bcrypt = require('bcryptjs');
 /** Create a User */
 const createUser = async (req, res) => {
     try {
-        // Set user role + determine if admin or basic user
+        // Set user role + determine if admin or basic user. If admin, hash req.body.secret and compare it to hashed secret in .env file
         req.body.role = 'basic'; 
-        if (req.body.secret) {
-            // hash the submitted secret and compare it to hashed secret in .env            
+        if (req.body.secret) {           
             const isMatch = await bcrypt.compare(req.body.secret, process.env.ADMIN_SECRET);
-            if (!isMatch) {
-                return res.status(400).send({error: 'Incorrect secret'});
-            } 
+            if (!isMatch) throw new Error('Incorrect secret')
             req.body.role = 'admin';
         }
         // Ensure email doesn't already exist
         const alreadyExists = await User.findOne({email: req.body.email})
-        if (alreadyExists) return res.status(400).send({error: 'Email already exists'}) 
+        if (alreadyExists) throw new Error('Email already exists')
         // Create user
         const user = new User(req.body)
         await user.save()
@@ -29,8 +26,8 @@ const createUser = async (req, res) => {
         user.password = undefined; 
         user.tokens = undefined;
         res.status(201).send({ user, token })
-    } catch (error) {
-        res.status(400).send({error: error})
+    } catch (err) {
+        return res.status(400).send({error: err.message})
     }
 }
 
@@ -39,15 +36,13 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body
         const user = await User.findByCredentials(email, password)
-        if (!user) {
-            return res.status(401).send({ error: 'Login failed! Check authentication credentials' })
-        }
+        if (!user) throw new Error('Login failed! Check authentication credentials')
         const token = await user.generateAuthToken()
         user.password = undefined;
         user.tokens = undefined;
         res.send({ user, token })
-    } catch (error) {
-        res.status(400).send(error)
+    } catch (err) {
+        res.status(401).send({error: err.message})
     }
 }
 
@@ -58,8 +53,8 @@ const viewProfile = async (req, res) => {
         user.password = undefined;
         user.tokens = undefined;
         res.send({ user })
-    } catch (error) {
-        res.status(400).send(error);
+    } catch (err) {
+        res.status(400).send({error: err.message});
     }
 }
 
@@ -71,8 +66,8 @@ const logout = async (req, res) => {
         })
         await req.user.save()
         res.send({ loggedOut: true })
-    } catch (error) {
-        res.status(500).send(error)
+    } catch (err) {
+        res.status(400).send({error: 'Logout attempt failed. Please try again'});
     }
 }
 
@@ -82,8 +77,8 @@ const logoutAll = async (req, res) => {
         req.user.tokens.splice(0, req.user.tokens.length)
         await req.user.save()
         res.send({ loggedOutAll: true })
-    } catch (error) {
-        res.status(500).send(error)
+    } catch (err) {
+        res.status(400).send({error: 'Logout attempt failed. Please try again'});
     }
 }
 
